@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="?attr/actionBarSize"
+    android:orientation="vertical"
+    tools:context="jp.gr.java_conf.ya.llmstumbler.MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <EditText
+        android:id="@+id/location_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:hint="@string/location_name"
+        android:singleLine="true"
+        android:text=""
+        android:textColor="@android:color/black" />
+
+    <EditText
+        android:id="@+id/result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:hint="@string/result"
+        android:singleLine="true"
+        android:textColor="@android:color/holo_red_light" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/white_list"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/white_list_bs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:width="200dp"
+                    android:height="100dp"
+                    android:background="@android:color/white"
+                    android:hint="@string/white_list_bs"
+                    android:maxHeight="200dp"
+                    android:minHeight="100dp"
+                    android:minWidth="200dp"
+                    android:text="@string/white_list_bs_value"
+                    android:textColor="@android:color/black"
+                    android:textSize="8sp" />
+
+                <TextView
+                    android:id="@+id/list_bs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:width="200dp"
+                    android:height="100dp"
+                    android:background="@android:color/white"
+                    android:maxHeight="200dp"
+                    android:minHeight="100dp"
+                    android:minWidth="200dp"
+                    android:text="@string/list_bs"
+                    android:textColor="@android:color/holo_blue_light"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/white_list_lte"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:width="200dp"
+                    android:height="100dp"
+                    android:background="@android:color/white"
+                    android:hint="@string/white_list_lte"
+                    android:maxHeight="200dp"
+                    android:minHeight="100dp"
+                    android:minWidth="200dp"
+                    android:text="@string/white_list_lte_value"
+                    android:textColor="@android:color/black"
+                    android:textSize="8sp" />
+
+                <TextView
+                    android:id="@+id/list_lte"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:width="200dp"
+                    android:height="100dp"
+                    android:background="@android:color/white"
+                    android:maxHeight="200dp"
+                    android:minHeight="100dp"
+                    android:minWidth="200dp"
+                    android:text="@string/list_lte"
+                    android:textColor="@android:color/holo_blue_light"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/white_list_wifi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:width="200dp"
+                    android:height="100dp"
+                    android:background="@android:color/white"
+                    android:hint="@string/white_list_wifi"
+                    android:maxHeight="200dp"
+                    android:minHeight="100dp"
+                    android:minWidth="200dp"
+                    android:text="@string/white_list_wifi_value"
+                    android:textColor="@android:color/black"
+                    android:textSize="8sp" />
+
+                <TextView
+                    android:id="@+id/list_wifi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:width="200dp"
+                    android:height="100dp"
+                    android:background="@android:color/white"
+                    android:maxHeight="200dp"
+                    android:minHeight="100dp"
+                    android:minWidth="200dp"
+                    android:text="@string/list_wifi"
+                    android:textColor="@android:color/holo_blue_light"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
+<!-- Copyright (c) 2016 YA <ya.androidapp@gmail.com> All rights reserved. -->
