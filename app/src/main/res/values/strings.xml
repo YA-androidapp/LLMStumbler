@@ -1,9 +1,19 @@
 <resources>
     <string name="app_name">LLMStumbler</string>
-    <string name="action_save">Save</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_result_clipboard">Result</string>
+    <string name="action_result_copy">Copy</string>
+    <string name="action_result_paste">Paste</string>
+    <string name="action_file">File</string>
+    <string name="action_load_default_whitelist">Load default white lists</string>
+    <string name="action_log_clear">Clear</string>
+    <string name="action_log_load">Load</string>
+    <string name="action_log_save">Save</string>
     <string name="action_scan">Scan</string>
     <string name="action_settings">Settings</string>
-    <string name="cannot_write_file">Cannot write files</string>
+    <string name="cannot_read_file">Cannot write file</string>
+    <string name="cannot_write_file">Cannot write file</string>
+    <string name="file_not_found">File not found</string>
     <string name="list_bs">List(BS):</string>
     <string name="list_lte">List(LTE):</string>
     <string name="list_wifi">List(WiFi):</string>

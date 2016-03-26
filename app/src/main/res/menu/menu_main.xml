@@ -8,14 +8,55 @@
         android:title="@string/action_scan"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_save"
-        android:orderInCategory="101"
-        android:title="@string/action_save"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/action_clear"
+        android:orderInCategory="100"
+        android:title="@string/action_clear"
+        app:showAsAction="never" />
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="102"
-        android:title="@string/action_settings"
-        app:showAsAction="ifRoom" />
+        android:id="@+id/action_load_default_whitelist"
+        android:orderInCategory="100"
+        android:title="@string/action_load_default_whitelist"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_file"
+        android:orderInCategory="100"
+        android:title="@string/action_file"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_log_clear"
+                android:orderInCategory="100"
+                android:title="@string/action_log_clear"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_log_load"
+                android:orderInCategory="100"
+                android:title="@string/action_log_load"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_log_save"
+                android:orderInCategory="100"
+                android:title="@string/action_log_save"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/action_result_clipboard"
+        android:orderInCategory="100"
+        android:title="@string/action_result_clipboard"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_result_copy"
+                android:orderInCategory="100"
+                android:title="@string/action_result_copy"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_result_paste"
+                android:orderInCategory="100"
+                android:title="@string/action_result_paste"
+                app:showAsAction="never" />
+        </menu>
+    </item>
 </menu>
 <!-- Copyright (c) 2016 YA <ya.androidapp@gmail.com> All rights reserved. -->
