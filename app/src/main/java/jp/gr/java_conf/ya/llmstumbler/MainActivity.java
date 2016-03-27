@@ -1,5 +1,6 @@
 package jp.gr.java_conf.ya.llmstumbler; // Copyright (c) 2016 YA <ya.androidapp@gmail.com> All rights reserved.
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -7,6 +8,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-    private boolean mBackKeyPressed = false;
+    private boolean isRunning = false, mBackKeyPressed = false;
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             try {
@@ -181,19 +183,109 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_scan) {
             scan();
         } else if (id == R.id.action_clear) {
-            result.setText("");
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_clear)
+                    .setMessage(R.string.action_clear_message)
+                    .setPositiveButton(R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    result.setText("");
+                                }
+                            })
+                    .setNegativeButton(R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                    .setCancelable(true)
+                    .create()
+                    .show();
         } else if (id == R.id.action_load_default_whitelist) {
-            loadDefaultWhitelist();
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_load_default_whitelist)
+                    .setMessage(R.string.action_load_default_whitelist_message)
+                    .setPositiveButton(R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    loadDefaultWhitelist();
+                                }
+                            })
+                    .setNegativeButton(R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                    .setCancelable(true)
+                    .create()
+                    .show();
         } else if (id == R.id.action_log_clear) {
-            clearLogFile();
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_log_clear)
+                    .setMessage(R.string.action_log_clear_message)
+                    .setPositiveButton(R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    clearLogFile();
+                                }
+                            })
+                    .setNegativeButton(R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                    .setCancelable(true)
+                    .create()
+                    .show();
         } else if (id == R.id.action_log_load) {
-            readLogFile();
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_log_load)
+                    .setMessage(R.string.action_log_load_message)
+                    .setPositiveButton(R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    readLogFile();
+                                }
+                            })
+                    .setNegativeButton(R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                    .setCancelable(true)
+                    .create()
+                    .show();
         } else if (id == R.id.action_log_save) {
             saveLogFile();
         } else if (id == R.id.action_result_copy) {
             resultCopy();
         } else if (id == R.id.action_result_paste) {
-            resultPaste();
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.action_result_paste)
+                    .setMessage(R.string.action_result_paste_message)
+                    .setPositiveButton(R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    resultPaste();
+                                }
+                            })
+                    .setNegativeButton(R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                    .setCancelable(true)
+                    .create()
+                    .show();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -387,16 +479,32 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
-        scanBs();
-        scanWifi();
-        scanLte();
+        try {
+            scanBs();
+            scanWifi();
+            scanLte();
+        } catch (Exception e) {
+            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
 
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                save();
+        if (!isRunning) {
+            try {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        isRunning = true;
+                        try {
+                            save();
+                        } catch (Exception e) {
+                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                        isRunning = false;
+                    }
+                }, 2 * BsScanTime);
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
             }
-        }, 2 * BsScanTime);
+        }
     }
 
     private void scanBs() {

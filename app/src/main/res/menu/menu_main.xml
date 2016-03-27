@@ -8,6 +8,24 @@
         android:title="@string/action_scan"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_result_clipboard"
+        android:orderInCategory="100"
+        android:title="@string/action_result_clipboard"
+        app:showAsAction="ifRoom">
+        <menu>
+            <item
+                android:id="@+id/action_result_copy"
+                android:orderInCategory="100"
+                android:title="@string/action_result_copy"
+                app:showAsAction="ifRoom" />
+            <item
+                android:id="@+id/action_result_paste"
+                android:orderInCategory="100"
+                android:title="@string/action_result_paste"
+                app:showAsAction="ifRoom" />
+        </menu>
+    </item>
+    <item
         android:id="@+id/action_clear"
         android:orderInCategory="100"
         android:title="@string/action_clear"
@@ -37,24 +55,6 @@
                 android:id="@+id/action_log_save"
                 android:orderInCategory="100"
                 android:title="@string/action_log_save"
-                app:showAsAction="never" />
-        </menu>
-    </item>
-    <item
-        android:id="@+id/action_result_clipboard"
-        android:orderInCategory="100"
-        android:title="@string/action_result_clipboard"
-        app:showAsAction="never">
-        <menu>
-            <item
-                android:id="@+id/action_result_copy"
-                android:orderInCategory="100"
-                android:title="@string/action_result_copy"
-                app:showAsAction="never" />
-            <item
-                android:id="@+id/action_result_paste"
-                android:orderInCategory="100"
-                android:title="@string/action_result_paste"
                 app:showAsAction="never" />
         </menu>
     </item>
