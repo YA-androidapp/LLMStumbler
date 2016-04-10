@@ -178,6 +178,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        if (mBroadcastReceiver != null) {
+            try {
+                unregisterReceiver(mBroadcastReceiver);
+            }catch(Exception e){
+            }
+        }
+
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_scan) {
@@ -516,25 +528,27 @@ public class MainActivity extends AppCompatActivity {
                     final IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
                     registerReceiver(mBroadcastReceiver, filter);
                     mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
-                    }
-                    mBluetoothAdapter.startDiscovery();
-                    if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                        mBluetoothAdapter.startLeScan(mLeScanCallback);
-                    }
-                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mBluetoothAdapter.isDiscovering()) {
-                                mBluetoothAdapter.cancelDiscovery();
-                            }
-                            if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                                mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                            }
-                            unregisterReceiver(mBroadcastReceiver);
+                    if (mBluetoothAdapter != null) {
+                        if (!mBluetoothAdapter.isEnabled()) {
+                            mBluetoothAdapter.enable();
                         }
-                    }, BsScanTime);
+                        mBluetoothAdapter.startDiscovery();
+                        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+                            mBluetoothAdapter.startLeScan(mLeScanCallback);
+                        }
+                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (mBluetoothAdapter.isDiscovering()) {
+                                    mBluetoothAdapter.cancelDiscovery();
+                                }
+                                if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+                                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                                }
+                                unregisterReceiver(mBroadcastReceiver);
+                            }
+                        }, BsScanTime);
+                    }
                 }
             }).start();
         } catch (Exception e) {
