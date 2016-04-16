@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private CountDownTimer mCountDownTimer;
     private static final long BsScanTime = 1000;
     private static final String DUMP_FILE = "llmstumbler.txt";
+    private String pre_location_name = "#FIRST_LOCATION_NAME#";
     private final String SEPARATOR = "|";
     private TelephonyManager mTelephonyManager;
     private static final ThreadLocal<SimpleDateFormat> mFilenameFormater = new ThreadLocal<SimpleDateFormat>() {
@@ -182,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         if (mBroadcastReceiver != null) {
             try {
                 unregisterReceiver(mBroadcastReceiver);
-            }catch(Exception e){
+            } catch (Exception e) {
             }
         }
 
@@ -298,6 +299,8 @@ public class MainActivity extends AppCompatActivity {
                     .setCancelable(true)
                     .create()
                     .show();
+        }else if (id == R.id.action_result_shaping){
+            resultShaping();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -340,19 +343,43 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void resultShaping(){
+        String shapedResult = "";
+
+        // 1行1地点
+        final String[] lines = result.getText().toString().split("\n");
+        int count1=0;
+        for (final String line : lines){
+            Log.v("LLMStumbler","resultShaping() line"+ Integer.toString(++count1) +":"+line);
+            // 1要素1AP
+            final String[] parts = line.split("\\|");
+
+            // 先頭は地点名
+            final StringBuilder sb = new StringBuilder();
+            Log.v("LLMStumbler","resultShaping() parts[0]:"+parts[0]);
+            sb.append(parts[0]);
+
+            // 重複を削除
+            final HashSet<String> part = new HashSet<>();
+            for (int i=1;i<parts.length-1;i++){
+                Log.v("LLMStumbler","resultShaping() parts["+ Integer.toString(i) +"]:"+parts[i]);
+                part.add(parts[i]);
+            }
+
+            // join
+            for (final String p : part){
+                sb.append("|");
+                sb.append(p);
+            }
+            shapedResult = shapedResult + sb.toString() + "\n";
+        }
+
+        result.setText(shapedResult);
+    }
+
     @Override
     protected void onPause() {
-        try {
-            final SharedPreferences data = getSharedPreferences("LLMS", Context.MODE_PRIVATE);
-            final SharedPreferences.Editor editor = data.edit();
-            editor.putString("result", result.getText().toString());
-            editor.putString("white_list_bs", white_list_bs.getText().toString());
-            editor.putString("white_list_lte", white_list_lte.getText().toString());
-            editor.putString("white_list_wifi", white_list_wifi.getText().toString());
-            editor.apply();
-        } catch (Exception e) {
-            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-        }
+        savePref();
 
         super.onPause();
     }
@@ -404,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
             final byte[] readBytes = new byte[fileInputStream.available()];
             fileInputStream.read(readBytes);
             final String readString = new String(readBytes);
-            Log.v("readString", readString);
+            Log.v("LLMStumbler","readLogFile() readString:"+ readString);
             result.setText(readString);
         } catch (FileNotFoundException e) {
             Toast.makeText(this, getString(R.string.file_not_found), Toast.LENGTH_LONG).show();
@@ -434,19 +461,26 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             final StringBuilder sb = new StringBuilder();
-            if (!location_name.getText().toString().equals(""))
-                sb.append(location_name.getText());
+            if (!pre_location_name.equals(location_name.getText().toString())) {
+                pre_location_name = location_name.getText().toString();
+                if (!result.getText().toString().equals(""))
+                    sb.append("\n");
 
-            sb.append("(");
-            sb.append(mFilenameFormater.get().format(new Date()));
-            sb.append(")");
+                if (!location_name.getText().toString().equals(""))
+                    sb.append(location_name.getText());
+
+                final String now = mFilenameFormater.get().format(new Date());
+                Log.v("LLMStumbler", "save() now:" + now);
+                sb.append("(");
+                sb.append(now);
+                sb.append(")");
+            }
             Log.v("LLMStumbler", "save() join(lteAps)");
             sb.append(join(lteAps));
             Log.v("LLMStumbler", "save() join(wifiAps)");
             sb.append(join(wifiAps));
             Log.v("LLMStumbler", "save() join(bsAps)");
             sb.append(join(bsAps));
-            sb.append("\n");
             final String content = sb.toString();
             Log.v("LLMStumbler", "save() content:");
             Log.v("LLMStumbler", content);
@@ -458,6 +492,22 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             result.setSelection(result.getText().length());
+        } catch (Exception e) {
+            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
+        savePref();
+    }
+
+    private void savePref() {
+        try {
+            final SharedPreferences data = getSharedPreferences("LLMS", Context.MODE_PRIVATE);
+            final SharedPreferences.Editor editor = data.edit();
+            editor.putString("result", result.getText().toString());
+            editor.putString("white_list_bs", white_list_bs.getText().toString());
+            editor.putString("white_list_lte", white_list_lte.getText().toString());
+            editor.putString("white_list_wifi", white_list_wifi.getText().toString());
+            editor.apply();
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -642,22 +692,26 @@ public class MainActivity extends AppCompatActivity {
                     mWifiManager.startScan();
                     final List<ScanResult> aps = mWifiManager.getScanResults();
                     for (final ScanResult sr : aps) {
-                        if ((!sr.BSSID.equals("")) && (!sr.SSID.equals(""))) {
-                            final String wifiResult = "M:" + sr.BSSID + "@" + sr.SSID;
-                            Log.v("LLMStumbler", "scanWifi() wifiResult:" + wifiResult);
+                        try {
+                            if ((!sr.BSSID.equals("")) && (!sr.SSID.equals(""))) {
+                                final String wifiResult = "M:" + sr.BSSID + "@" + sr.SSID;
+                                Log.v("LLMStumbler", "scanWifi() wifiResult:" + wifiResult);
 
-                            if ((white_list_wifi.getText().toString().equals("")) || (("," + white_list_wifi.getText().toString() + ",").contains("," + sr.SSID + ","))) {
-                                Log.v("LLMStumbler", "scanWifi() ((\",\" + " + white_list_wifi.getText().toString() + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
-                                wifiAps.add(wifiResult);
+                                if ((white_list_wifi.getText().toString().equals("")) || (("," + white_list_wifi.getText().toString() + ",").contains("," + sr.SSID + ","))) {
+                                    Log.v("LLMStumbler", "scanWifi() ((\",\" + " + white_list_wifi.getText().toString() + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
+                                    wifiAps.add(wifiResult);
 
-                                runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        list_wifi.setText(wifiResult);
-                                    }
-                                });
-                            } else {
-                                Log.v("LLMStumbler", "scanWifi() (! (\",\" + " + white_list_wifi.getText().toString() + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
+                                    runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            list_wifi.setText(wifiResult);
+                                        }
+                                    });
+                                } else {
+                                    Log.v("LLMStumbler", "scanWifi() (! (\",\" + " + white_list_wifi.getText().toString() + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
+                                }
                             }
+                        } catch (Exception e) {
+                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
                 }

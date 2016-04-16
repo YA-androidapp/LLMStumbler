@@ -6,6 +6,7 @@
     <string name="action_result_copy">Copy</string>
     <string name="action_result_paste">Paste</string>
     <string name="action_result_paste_message">Are you sure to paste?</string>
+    <string name="action_result_shaping">Shaping</string>
     <string name="action_file">File</string>
     <string name="action_load_default_whitelist">Load default white lists</string>
     <string name="action_load_default_whitelist_message">Are you sure to load default white lists?</string>
