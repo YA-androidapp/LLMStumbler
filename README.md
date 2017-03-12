@@ -11,6 +11,16 @@ Stumbler app for [Llama](https://play.google.com/store/apps/details?id=com.kebab
 
 Download the APK package from [github](https://github.com/YA-androidapp/LLMStumbler/blob/master/app/build/outputs/apk/app-debug.apk?raw=true)
 
+## Usage
+---
+
+Android 6.0以降の端末をお使いの場合は、端末の位置情報・権限を有効化する必要があります。
+参考: [https://firespeed.org/diary.php?diary=kenz-1822](https://firespeed.org/diary.php?diary=kenz-1822)
+
+![位置情報](README.md-img/readme001.png)
+
+![権限](README.md-img/readme002.png)
+
 ## Licence
 ---
 
@@ -23,4 +33,4 @@ Download the APK package from [github](https://github.com/YA-androidapp/LLMStumb
 
 ---
 
-Copyright (c) 2016 YA-androidapp(https://github.com/YA-androidapp) All rights reserved.
+Copyright (c) 2016-2017 YA-androidapp(https://github.com/YA-androidapp) All rights reserved.

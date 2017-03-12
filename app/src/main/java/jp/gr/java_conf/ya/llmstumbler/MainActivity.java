@@ -1,5 +1,6 @@
-package jp.gr.java_conf.ya.llmstumbler; // Copyright (c) 2016 YA <ya.androidapp@gmail.com> All rights reserved.
+package jp.gr.java_conf.ya.llmstumbler; // Copyright (c) 2016-2017 YA <ya.androidapp@gmail.com> All rights reserved.
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -15,12 +16,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             try {
-                Log.v("LLMStumbler", "onLeScan()");
+                // Log.i("LLMStumbler", "onLeScan()");
                 scannedBs(device);
             } catch (Exception e) {
                 Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -85,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 final String action = intent.getAction();
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    Log.v("LLMStumbler", "(BluetoothDevice.ACTION_FOUND.equals(action))");
+                    // Log.i("LLMStumbler", "(BluetoothDevice.ACTION_FOUND.equals(action))");
                     scannedBs(device);
                 }
             } catch (Exception e) {
@@ -157,6 +160,19 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Android M以降はWifiの情報を取得するだけでも位置情報Permissionが必要
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(
+                                new String[]{
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_WIFI_STATE
+                                },
+                                1);
+                        return;
+                    }
+                }
+
                 scan();
             }
         });
@@ -194,6 +210,19 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_scan) {
+            // Android M以降はWifiの情報を取得するだけでも位置情報Permissionが必要
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(
+                            new String[]{
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_WIFI_STATE
+                            },
+                            1);
+                    return true;
+                }
+            }
+
             scan();
         } else if (id == R.id.action_clear) {
             new AlertDialog.Builder(this)
@@ -299,10 +328,22 @@ public class MainActivity extends AppCompatActivity {
                     .setCancelable(true)
                     .create()
                     .show();
-        }else if (id == R.id.action_result_shaping){
+        } else if (id == R.id.action_result_shaping) {
             resultShaping();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            scan();
+        } else {
+            Toast.makeText(MainActivity.this, getString(R.string.permission_denied), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void resultCopy() {
@@ -343,35 +384,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void resultShaping(){
+    private void resultShaping() {
         String shapedResult = "";
 
         // 1行1地点
-        final String[] lines = result.getText().toString().split("\n");
-        int count1=0;
-        for (final String line : lines){
-            Log.v("LLMStumbler","resultShaping() line"+ Integer.toString(++count1) +":"+line);
-            // 1要素1AP
-            final String[] parts = line.split("\\|");
+        final Editable resultEditable = result.getText();
+        if (resultEditable.length() > 0) {
+            final String resultText = resultEditable.toString();
+            final String[] lines = resultText.split("\n");
+            int count1 = 0;
+            for (final String line : lines) {
+                try {
+                    // Log.i("LLMStumbler", "resultShaping() line" + Integer.toString(++count1) + ":" + line);
 
-            // 先頭は地点名
-            final StringBuilder sb = new StringBuilder();
-            Log.v("LLMStumbler","resultShaping() parts[0]:"+parts[0]);
-            sb.append(parts[0]);
+                    if (!line.equals("")) {
+                        // 1要素1AP
+                        final String[] parts = line.split("\\|");
 
-            // 重複を削除
-            final HashSet<String> part = new HashSet<>();
-            for (int i=1;i<parts.length-1;i++){
-                Log.v("LLMStumbler","resultShaping() parts["+ Integer.toString(i) +"]:"+parts[i]);
-                part.add(parts[i]);
+                        // 先頭は地点名
+                        final StringBuilder sb = new StringBuilder();
+                        // Log.i("LLMStumbler", "resultShaping() parts[0]:" + parts[0]);
+                        sb.append(parts[0]);
+
+                        // 重複を削除
+                        final HashSet<String> part = new HashSet<>();
+                        for (int i = 1; i < parts.length - 1; i++) {
+                            // Log.i("LLMStumbler", "resultShaping() parts[" + Integer.toString(i) + "]:" + parts[i]);
+                            part.add(parts[i]);
+                        }
+
+                        // join
+                        for (final String p : part) {
+                            sb.append("|");
+                            sb.append(p);
+                        }
+                        shapedResult = shapedResult + sb.toString() + "\n";
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
-
-            // join
-            for (final String p : part){
-                sb.append("|");
-                sb.append(p);
-            }
-            shapedResult = shapedResult + sb.toString() + "\n";
         }
 
         result.setText(shapedResult);
@@ -431,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
             final byte[] readBytes = new byte[fileInputStream.available()];
             fileInputStream.read(readBytes);
             final String readString = new String(readBytes);
-            Log.v("LLMStumbler","readLogFile() readString:"+ readString);
+            // Log.i("LLMStumbler", "readLogFile() readString:" + readString);
             result.setText(readString);
         } catch (FileNotFoundException e) {
             Toast.makeText(this, getString(R.string.file_not_found), Toast.LENGTH_LONG).show();
@@ -457,7 +509,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void save() {
-        Log.v("LLMStumbler", "save()");
+        // Log.i("LLMStumbler", "save()");
 
         try {
             final StringBuilder sb = new StringBuilder();
@@ -470,20 +522,20 @@ public class MainActivity extends AppCompatActivity {
                     sb.append(location_name.getText());
 
                 final String now = mFilenameFormater.get().format(new Date());
-                Log.v("LLMStumbler", "save() now:" + now);
+                // Log.i("LLMStumbler", "save() now:" + now);
                 sb.append("(");
                 sb.append(now);
                 sb.append(")");
             }
-            Log.v("LLMStumbler", "save() join(lteAps)");
+            // Log.i("LLMStumbler", "save() join(lteAps)");
             sb.append(join(lteAps));
-            Log.v("LLMStumbler", "save() join(wifiAps)");
+            // Log.i("LLMStumbler", "save() join(wifiAps)");
             sb.append(join(wifiAps));
-            Log.v("LLMStumbler", "save() join(bsAps)");
+            // Log.i("LLMStumbler", "save() join(bsAps)");
             sb.append(join(bsAps));
             final String content = sb.toString();
-            Log.v("LLMStumbler", "save() content:");
-            Log.v("LLMStumbler", content);
+            // Log.i("LLMStumbler", "save() content:");
+            // Log.i("LLMStumbler", content);
 
             result.setText(result.getText().toString() + content);
         } catch (Exception e) {
@@ -503,10 +555,31 @@ public class MainActivity extends AppCompatActivity {
         try {
             final SharedPreferences data = getSharedPreferences("LLMS", Context.MODE_PRIVATE);
             final SharedPreferences.Editor editor = data.edit();
-            editor.putString("result", result.getText().toString());
-            editor.putString("white_list_bs", white_list_bs.getText().toString());
-            editor.putString("white_list_lte", white_list_lte.getText().toString());
-            editor.putString("white_list_wifi", white_list_wifi.getText().toString());
+
+            if (result.getText().length() > 0) {
+                editor.putString("result", result.getText().toString());
+            } else {
+                editor.putString("result", "");
+            }
+
+            if (white_list_bs.getText().length() > 0) {
+                editor.putString("white_list_bs", white_list_bs.getText().toString());
+            } else {
+                editor.putString("white_list_bs", "");
+            }
+
+            if (white_list_lte.getText().length() > 0) {
+                editor.putString("white_list_lte", white_list_lte.getText().toString());
+            } else {
+                editor.putString("white_list_lte", "");
+            }
+
+            if (white_list_wifi.getText().length() > 0) {
+                editor.putString("white_list_wifi", white_list_wifi.getText().toString());
+            } else {
+                editor.putString("white_list_wifi", "");
+            }
+
             editor.apply();
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -515,14 +588,14 @@ public class MainActivity extends AppCompatActivity {
 
     private String join(Set<String> aps) {
         try {
-            Log.v("LLMStumbler", "join()");
+            // Log.i("LLMStumbler", "join()");
             final StringBuilder sb = new StringBuilder();
             for (String str : aps) {
                 sb.append(SEPARATOR);
                 sb.append(str);
             }
 
-            Log.v("LLMStumbler", "join() " + sb.toString());
+            // Log.i("LLMStumbler", "join() " + sb.toString());
             return sb.toString();
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -531,7 +604,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scan() {
-        Log.v("LLMStumbler", "scan()");
+        // Log.i("LLMStumbler", "scan()");
 
         try {
             bsAps.clear();
@@ -571,7 +644,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void scanBs() {
         try {
-            Log.v("LLMStumbler", "scanBs()");
+            // Log.i("LLMStumbler", "scanBs()");
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -608,9 +681,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void scannedBs(BluetoothDevice device) {
         try {
+            // ホワイトリスト
+            Editable whiteListBsEditable = white_list_lte.getText();
+            String whiteListBsString = "";
+            if (whiteListBsEditable.length() > 0)
+                whiteListBsString = whiteListBsEditable.toString();
+
             if ((!device.getName().equals("")) && (!device.getAddress().equals(""))) {
                 final String bsResult = "B:" + device.getName() + ":" + device.getAddress();
-                if ((white_list_bs.getText().toString().equals("")) || (("," + white_list_bs.getText().toString() + ",").contains("," + device.getName() + ","))) {
+                if ((whiteListBsString.equals("")) || (("," + whiteListBsString + ",").contains("," + device.getName() + ","))) {
                     bsAps.add(bsResult);
 
                     runOnUiThread(new Runnable() {
@@ -627,54 +706,69 @@ public class MainActivity extends AppCompatActivity {
 
     private void scanLte() {
         try {
-            Log.v("LLMStumbler", "scanLte()");
+            // Log.i("LLMStumbler", "scanLte()");
             if (mTelephonyManager == null)
                 mTelephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
-            final List<CellInfo> cellInfoList = mTelephonyManager.getAllCellInfo();
-            if (cellInfoList != null) {
-                Log.v("LLMStumbler", "getScannedLte() (cellInfoList != null)");
-                if (cellInfoList.size() > 0) {
-                    Log.v("LLMStumbler", "getScannedLte() (cellInfoList.size() > 0)");
-                    for (CellInfo cellInfo : cellInfoList) {
-                        if (cellInfo instanceof CellInfoLte) {
-                            final CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
-                            final CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
-                            if ((cellIdentityLte.getCi() < Integer.MAX_VALUE) && (cellIdentityLte.getCi() > -1) &&
-                                    (cellIdentityLte.getMcc() < Integer.MAX_VALUE) && (cellIdentityLte.getMcc() > -1) &&
-                                    (cellIdentityLte.getMnc() < Integer.MAX_VALUE) && (cellIdentityLte.getMnc() > -1)) {
-                                final String lteResult = Integer.toString(cellIdentityLte.getCi()) + ":" + Integer.toString(cellIdentityLte.getMcc()) + ":" + Integer.toString(cellIdentityLte.getMnc());
-                                if ((white_list_lte.getText().toString().equals("")) || (("," + white_list_lte.getText().toString() + ",").contains("," + Integer.toString(cellIdentityLte.getCi()) + ","))) {
-                                    lteAps.add(lteResult);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    // ホワイトリスト
+                    Editable whiteListLteEditable = white_list_lte.getText();
+                    String whiteListLteString = "";
+                    if (whiteListLteEditable.length() > 0)
+                        whiteListLteString = whiteListLteEditable.toString();
 
-                                    runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            list_lte.setText(lteResult);
-                                        }
-                                    });
-                                }
-                            }
-                        } else if (cellInfo instanceof CellInfoGsm) {
-                            final CellInfoGsm cellInfoGsm = (CellInfoGsm) cellInfo;
-                            final CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
-                            if ((cellIdentityGsm.getCid() < Integer.MAX_VALUE) && (cellIdentityGsm.getCid() > -1) &&
-                                    (cellIdentityGsm.getMcc() < Integer.MAX_VALUE) && (cellIdentityGsm.getMcc() > -1) &&
-                                    (cellIdentityGsm.getMnc() < Integer.MAX_VALUE) && (cellIdentityGsm.getMnc() > -1)) {
-                                final String gsmResult = Integer.toString(cellIdentityGsm.getCid()) + ":" + Integer.toString(cellIdentityGsm.getMcc()) + ":" + Integer.toString(cellIdentityGsm.getMnc());
-                                if ((white_list_lte.getText().toString().equals("")) || (("," + white_list_lte.getText().toString() + ",").contains("," + Integer.toString(cellIdentityGsm.getCid()) + ","))) {
-                                    lteAps.add(gsmResult);
+                    final List<CellInfo> cellInfoList = mTelephonyManager.getAllCellInfo();
+                    if (cellInfoList != null) {
+                        // Log.i("LLMStumbler", "getScannedLte() (cellInfoList != null)");
+                        if (cellInfoList.size() > 0) {
+                            // Log.i("LLMStumbler", "getScannedLte() (cellInfoList.size() > 0)");
+                            for (CellInfo cellInfo : cellInfoList) {
+                                try {
+                                    if (cellInfo instanceof CellInfoLte) {
+                                        final CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
+                                        final CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
+                                        if ((cellIdentityLte.getCi() < Integer.MAX_VALUE) && (cellIdentityLte.getCi() > -1) &&
+                                                (cellIdentityLte.getMcc() < Integer.MAX_VALUE) && (cellIdentityLte.getMcc() > -1) &&
+                                                (cellIdentityLte.getMnc() < Integer.MAX_VALUE) && (cellIdentityLte.getMnc() > -1)) {
+                                            final String lteResult = Integer.toString(cellIdentityLte.getCi()) + ":" + Integer.toString(cellIdentityLte.getMcc()) + ":" + Integer.toString(cellIdentityLte.getMnc());
+                                            if ((whiteListLteString.equals("")) || (("," + whiteListLteString + ",").contains("," + Integer.toString(cellIdentityLte.getCi()) + ","))) {
+                                                lteAps.add(lteResult);
 
-                                    runOnUiThread(new Runnable() {
-                                        public void run() {
-                                            list_lte.setText(gsmResult);
+                                                runOnUiThread(new Runnable() {
+                                                    public void run() {
+                                                        list_lte.setText(lteResult);
+                                                    }
+                                                });
+                                            }
                                         }
-                                    });
+                                    } else if (cellInfo instanceof CellInfoGsm) {
+                                        final CellInfoGsm cellInfoGsm = (CellInfoGsm) cellInfo;
+                                        final CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
+                                        if ((cellIdentityGsm.getCid() < Integer.MAX_VALUE) && (cellIdentityGsm.getCid() > -1) &&
+                                                (cellIdentityGsm.getMcc() < Integer.MAX_VALUE) && (cellIdentityGsm.getMcc() > -1) &&
+                                                (cellIdentityGsm.getMnc() < Integer.MAX_VALUE) && (cellIdentityGsm.getMnc() > -1)) {
+                                            final String gsmResult = Integer.toString(cellIdentityGsm.getCid()) + ":" + Integer.toString(cellIdentityGsm.getMcc()) + ":" + Integer.toString(cellIdentityGsm.getMnc());
+                                            if ((whiteListLteString.equals("")) || (("," + whiteListLteString + ",").contains("," + Integer.toString(cellIdentityGsm.getCid()) + ","))) {
+                                                lteAps.add(gsmResult);
+
+                                                runOnUiThread(new Runnable() {
+                                                    public void run() {
+                                                        list_lte.setText(gsmResult);
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             }
                         }
                     }
                 }
-            }
+            }).start();
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -682,23 +776,31 @@ public class MainActivity extends AppCompatActivity {
 
     private void scanWifi() {
         try {
-            Log.v("LLMStumbler", "scanWifi()");
+            // Log.i("LLMStumbler", "scanWifi()");
             if (mWifiManager == null)
-                mWifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+                mWifiManager = (WifiManager) (this.getApplicationContext()).getSystemService(WIFI_SERVICE);
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    // ホワイトリスト
+                    Editable whiteListWifiEditable = white_list_wifi.getText();
+                    String whiteListWifiString = "";
+                    if (whiteListWifiEditable.length() > 0)
+                        whiteListWifiString = whiteListWifiEditable.toString();
+
                     mWifiManager.startScan();
                     final List<ScanResult> aps = mWifiManager.getScanResults();
+                    // Log.i("LLMStumbler", "scanWifi() aps.size():"+aps.size());
                     for (final ScanResult sr : aps) {
                         try {
-                            if ((!sr.BSSID.equals("")) && (!sr.SSID.equals(""))) {
+                            // if ((!sr.BSSID.equals("")) && (!sr.SSID.equals(""))) {
+                            if (!sr.BSSID.equals("")) {
                                 final String wifiResult = "M:" + sr.BSSID + "@" + sr.SSID;
-                                Log.v("LLMStumbler", "scanWifi() wifiResult:" + wifiResult);
+                                // Log.i("LLMStumbler", "scanWifi() wifiResult:" + wifiResult);
 
-                                if ((white_list_wifi.getText().toString().equals("")) || (("," + white_list_wifi.getText().toString() + ",").contains("," + sr.SSID + ","))) {
-                                    Log.v("LLMStumbler", "scanWifi() ((\",\" + " + white_list_wifi.getText().toString() + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
+                                if ((whiteListWifiString.equals("")) || (("," + whiteListWifiString + ",").contains("," + sr.SSID + ","))) {
+                                    // Log.i("LLMStumbler", "scanWifi() ((\",\" + " + whiteListWifiString + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
                                     wifiAps.add(wifiResult);
 
                                     runOnUiThread(new Runnable() {
@@ -707,7 +809,7 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                     });
                                 } else {
-                                    Log.v("LLMStumbler", "scanWifi() (! (\",\" + " + white_list_wifi.getText().toString() + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
+                                    // Log.i("LLMStumbler", "scanWifi() (! (\",\" + " + whiteListWifiString + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
                                 }
                             }
                         } catch (Exception e) {

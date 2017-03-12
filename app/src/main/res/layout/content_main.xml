@@ -16,27 +16,19 @@
         android:hint="@string/location_name"
         android:singleLine="true"
         android:text=""
+        android:textSize="20sp"
         android:textColor="@android:color/black" />
-
-    <EditText
-        android:id="@+id/result"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:hint="@string/result"
-        android:singleLine="true"
-        android:textColor="@android:color/holo_red_light" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/white_list"
-            android:textSize="12sp" />
+            android:textSize="6sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -45,7 +37,7 @@
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -58,12 +50,12 @@
                     android:height="100dp"
                     android:background="@android:color/white"
                     android:hint="@string/white_list_bs"
-                    android:maxHeight="200dp"
+                    android:maxHeight="100dp"
                     android:minHeight="100dp"
                     android:minWidth="200dp"
                     android:text="@string/white_list_bs_value"
                     android:textColor="@android:color/black"
-                    android:textSize="8sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/list_bs"
@@ -71,19 +63,19 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:width="200dp"
-                    android:height="100dp"
+                    android:height="20dp"
                     android:background="@android:color/white"
-                    android:maxHeight="200dp"
-                    android:minHeight="100dp"
+                    android:maxHeight="100dp"
+                    android:minHeight="20dp"
                     android:minWidth="200dp"
                     android:text="@string/list_bs"
                     android:textColor="@android:color/holo_blue_light"
-                    android:textSize="12sp" />
+                    android:textSize="6sp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -101,7 +93,7 @@
                     android:minWidth="200dp"
                     android:text="@string/white_list_lte_value"
                     android:textColor="@android:color/black"
-                    android:textSize="8sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/list_lte"
@@ -109,19 +101,19 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:width="200dp"
-                    android:height="100dp"
+                    android:height="20dp"
                     android:background="@android:color/white"
-                    android:maxHeight="200dp"
-                    android:minHeight="100dp"
+                    android:maxHeight="100dp"
+                    android:minHeight="20dp"
                     android:minWidth="200dp"
                     android:text="@string/list_lte"
                     android:textColor="@android:color/holo_blue_light"
-                    android:textSize="12sp" />
+                    android:textSize="6sp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -139,7 +131,7 @@
                     android:minWidth="200dp"
                     android:text="@string/white_list_wifi_value"
                     android:textColor="@android:color/black"
-                    android:textSize="8sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/list_wifi"
@@ -147,16 +139,26 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:width="200dp"
-                    android:height="100dp"
+                    android:height="20dp"
                     android:background="@android:color/white"
-                    android:maxHeight="200dp"
-                    android:minHeight="100dp"
+                    android:maxHeight="100dp"
+                    android:minHeight="20dp"
                     android:minWidth="200dp"
                     android:text="@string/list_wifi"
                     android:textColor="@android:color/holo_blue_light"
-                    android:textSize="12sp" />
+                    android:textSize="6sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
+
+    <EditText
+        android:id="@+id/result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:hint="@string/result"
+        android:textColor="@android:color/holo_red_light"
+        android:textSize="6sp" />
+
 </LinearLayout>
-<!-- Copyright (c) 2016 YA <ya.androidapp@gmail.com> All rights reserved. -->
+<!-- Copyright (c) 2016-2017 YA <ya.androidapp@gmail.com> All rights reserved. -->

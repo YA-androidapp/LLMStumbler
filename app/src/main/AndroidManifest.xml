@@ -3,6 +3,7 @@
     package="jp.gr.java_conf.ya.llmstumbler">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -32,3 +33,4 @@
     </application>
 
 </manifest>
+<!-- Copyright (c) 2016-2017 YA <ya.androidapp@gmail.com> All rights reserved. -->
