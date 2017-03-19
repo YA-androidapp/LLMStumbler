@@ -19,13 +19,10 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.ParcelUuid;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.CellIdentityGsm;
@@ -33,30 +30,22 @@ import android.telephony.CellIdentityLte;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
-import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -65,23 +54,28 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final long BsScanTime = 1000;
+    private static final String DUMP_FILE = "llmstumbler.txt";
+    private static final ThreadLocal<SimpleDateFormat> mFilenameFormater = new ThreadLocal<SimpleDateFormat>() {
+        private static final String FILENAME_PATTERN = "yyyyMMddHHmmss";
+
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat(FILENAME_PATTERN, Locale.ENGLISH);
+        }
+    };
+    private final String SEPARATOR = "|";
     public Set<String> bsAps = new HashSet<>();
     public Set<String> lteAps = new HashSet<>();
     public Set<String> wifiAps = new HashSet<>();
-
     private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            try {
-                // Log.i("LLMStumbler", "onLeScan()");
-                scannedBs(device);
-            } catch (Exception e) {
-                Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        }
-    };
     private boolean isRunning = false, mBackKeyPressed = false;
+    private CountDownTimer mCountDownTimer;
+    private String pre_location_name = "#FIRST_LOCATION_NAME#";
+    private TelephonyManager mTelephonyManager;
+    private WifiManager mWifiManager;
+    private EditText location_name, result, white_list_bs, white_list_lte, white_list_wifi;
+    private TextView list_bs, list_lte, list_wifi;
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             try {
@@ -96,24 +90,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-    private CountDownTimer mCountDownTimer;
-    private static final long BsScanTime = 1000;
-    private static final String DUMP_FILE = "llmstumbler.txt";
-    private String pre_location_name = "#FIRST_LOCATION_NAME#";
-    private final String SEPARATOR = "|";
-    private TelephonyManager mTelephonyManager;
-    private static final ThreadLocal<SimpleDateFormat> mFilenameFormater = new ThreadLocal<SimpleDateFormat>() {
-        private static final String FILENAME_PATTERN = "yyyyMMddHHmmss";
-
+    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
-        protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat(FILENAME_PATTERN, Locale.ENGLISH);
+        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+            try {
+                // Log.i("LLMStumbler", "onLeScan()");
+                scannedBs(device);
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+            }
         }
     };
-    private WifiManager mWifiManager;
-
-    private EditText location_name, result, white_list_bs, white_list_lte, white_list_wifi;
-    private TextView list_bs, list_lte, list_wifi;
     private FloatingActionButton fab;
 
     @Override
@@ -162,9 +149,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 // Android M以降はWifiの情報を取得するだけでも位置情報Permissionが必要
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    if ((checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                            || (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                            || (checkSelfPermission(Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED)) {
                         requestPermissions(
                                 new String[]{
+                                        Manifest.permission.ACCESS_COARSE_LOCATION,
                                         Manifest.permission.ACCESS_FINE_LOCATION,
                                         Manifest.permission.ACCESS_WIFI_STATE
                                 },
@@ -392,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
         if (resultEditable.length() > 0) {
             final String resultText = resultEditable.toString();
             final String[] lines = resultText.split("\n");
-            int count1 = 0;
             for (final String line : lines) {
                 try {
                     // Log.i("LLMStumbler", "resultShaping() line" + Integer.toString(++count1) + ":" + line);
@@ -689,7 +678,7 @@ public class MainActivity extends AppCompatActivity {
 
             if ((!device.getName().equals("")) && (!device.getAddress().equals(""))) {
                 final String bsResult = "B:" + device.getName() + ":" + device.getAddress();
-                if ((whiteListBsString.equals("")) || (("," + whiteListBsString + ",").contains("," + device.getName() + ","))) {
+                if ((whiteListBsString.equals("")) || (("," + whiteListBsString.toLowerCase(Locale.ENGLISH) + ",").contains("," + device.getName().toLowerCase(Locale.ENGLISH) + ","))) {
                     bsAps.add(bsResult);
 
                     runOnUiThread(new Runnable() {
@@ -733,7 +722,7 @@ public class MainActivity extends AppCompatActivity {
                                                 (cellIdentityLte.getMcc() < Integer.MAX_VALUE) && (cellIdentityLte.getMcc() > -1) &&
                                                 (cellIdentityLte.getMnc() < Integer.MAX_VALUE) && (cellIdentityLte.getMnc() > -1)) {
                                             final String lteResult = Integer.toString(cellIdentityLte.getCi()) + ":" + Integer.toString(cellIdentityLte.getMcc()) + ":" + Integer.toString(cellIdentityLte.getMnc());
-                                            if ((whiteListLteString.equals("")) || (("," + whiteListLteString + ",").contains("," + Integer.toString(cellIdentityLte.getCi()) + ","))) {
+                                            if ((whiteListLteString.equals("")) || (("," + whiteListLteString.toLowerCase(Locale.ENGLISH) + ",").contains("," + Integer.toString(cellIdentityLte.getCi()).toLowerCase(Locale.ENGLISH) + ","))) {
                                                 lteAps.add(lteResult);
 
                                                 runOnUiThread(new Runnable() {
@@ -750,7 +739,7 @@ public class MainActivity extends AppCompatActivity {
                                                 (cellIdentityGsm.getMcc() < Integer.MAX_VALUE) && (cellIdentityGsm.getMcc() > -1) &&
                                                 (cellIdentityGsm.getMnc() < Integer.MAX_VALUE) && (cellIdentityGsm.getMnc() > -1)) {
                                             final String gsmResult = Integer.toString(cellIdentityGsm.getCid()) + ":" + Integer.toString(cellIdentityGsm.getMcc()) + ":" + Integer.toString(cellIdentityGsm.getMnc());
-                                            if ((whiteListLteString.equals("")) || (("," + whiteListLteString + ",").contains("," + Integer.toString(cellIdentityGsm.getCid()) + ","))) {
+                                            if ((whiteListLteString.equals("")) || (("," + whiteListLteString.toLowerCase(Locale.ENGLISH) + ",").contains("," + Integer.toString(cellIdentityGsm.getCid()).toLowerCase(Locale.ENGLISH) + ","))) {
                                                 lteAps.add(gsmResult);
 
                                                 runOnUiThread(new Runnable() {
@@ -784,23 +773,24 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     // ホワイトリスト
-                    Editable whiteListWifiEditable = white_list_wifi.getText();
+                    final Editable whiteListWifiEditable = white_list_wifi.getText();
                     String whiteListWifiString = "";
                     if (whiteListWifiEditable.length() > 0)
                         whiteListWifiString = whiteListWifiEditable.toString();
 
                     mWifiManager.startScan();
                     final List<ScanResult> aps = mWifiManager.getScanResults();
-                    // Log.i("LLMStumbler", "scanWifi() aps.size():"+aps.size());
+                    Log.i("LLMStumbler", "scanWifi() aps.size():" + aps.size());
                     for (final ScanResult sr : aps) {
                         try {
-                            // if ((!sr.BSSID.equals("")) && (!sr.SSID.equals(""))) {
-                            if (!sr.BSSID.equals("")) {
-                                final String wifiResult = "M:" + sr.BSSID + "@" + sr.SSID;
-                                // Log.i("LLMStumbler", "scanWifi() wifiResult:" + wifiResult);
+                            // Log.i("LLMStumbler", "scanWifi() ScanResult:" + sr.toString());
+                            final String bssid = ((sr.BSSID != null) ? sr.BSSID : "");
+                            final String ssid = ((sr.SSID != null) ? sr.SSID : "");
 
-                                if ((whiteListWifiString.equals("")) || (("," + whiteListWifiString + ",").contains("," + sr.SSID + ","))) {
-                                    // Log.i("LLMStumbler", "scanWifi() ((\",\" + " + whiteListWifiString + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
+                            if (!bssid.equals("")) {
+                                final String wifiResult = "M:" + bssid + "@" + ssid;
+                                // Log.i("LLMStumbler", "scanWifi() wifiResult:" + wifiResult.toLowerCase() + " : " + (("," + whiteListWifiString.toLowerCase() + ",").indexOf("," + ssid.toLowerCase() + ",")));
+                                if ((whiteListWifiString.equals("")) || (("," + whiteListWifiString.toLowerCase() + ",").indexOf("," + ssid.toLowerCase() + ",")>-1)) {
                                     wifiAps.add(wifiResult);
 
                                     runOnUiThread(new Runnable() {
@@ -808,18 +798,16 @@ public class MainActivity extends AppCompatActivity {
                                             list_wifi.setText(wifiResult);
                                         }
                                     });
-                                } else {
-                                    // Log.i("LLMStumbler", "scanWifi() (! (\",\" + " + whiteListWifiString + " + \",\").contains(\",\" + " + sr.SSID + " + \",\"))");
                                 }
                             }
                         } catch (Exception e) {
-                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, "1:" + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
                 }
             }).start();
         } catch (Exception e) {
-            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "0:" + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 }
